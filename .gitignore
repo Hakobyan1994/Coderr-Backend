@@ -1,0 +1,42 @@
+# Python kompilierte Dateien und __pycache__ Ordner
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Bytecode-Dateien
+*.pyc
+*.pyo
+
+# Virtuelle Umgebung
+env/
+venv/
+ENV/
+.venv/
+
+# Umgebungsvariablen / Secrets
+.env
+*.env
+
+# SQLite-Datenbanken
+*.sqlite3
+db.sqlite3
+
+# Log-Dateien
+*.log
+
+# Medien-Dateien (Uploads, Bilder etc.)
+media/
+
+# IDE/Editor-spezifische Dateien
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Django Migrations (nur "__init__.py" behalten)
+**/migrations/**
+!**/migrations/__init__.py
+
+# Sonstige temporäre Dateien
+.DS_Store
+Thumbs.db
