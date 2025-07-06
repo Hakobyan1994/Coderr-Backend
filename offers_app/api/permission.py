@@ -7,9 +7,12 @@ class IsBusinessUser(permissions.BasePermission):
 
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
-            return True
-        profile = get_object_or_404(Profile, user=request.user)
-        return profile.user_type == 'business'
+            return True  # Jeder darf lesen.
+        if not request.user.is_authenticated:
+            return False  # Anonyme User dürfen nicht schreiben.
+        
+        profile = getattr(request.user, 'profile', None)
+        return profile is not None and profile.user_type == 'business'
 
 
 
@@ -21,4 +24,10 @@ class IsOfferCreatorOrReadOnly(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:
             return True
-        return obj.creator == request.user
+        user_profile = Profile.objects.filter(user=request.user).first()
+        
+        return (
+            obj.creator == request.user and
+            user_profile is not None and
+            user_profile.user_type == 'business'
+        )

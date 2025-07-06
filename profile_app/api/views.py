@@ -6,6 +6,8 @@ from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from user_auth_app.models import Profile
 from rest_framework.response import Response
+from .permissions import IsOwner
+
 
 class BusinessProfileView(generics.RetrieveUpdateAPIView):
     queryset = BusinessProfile.objects.select_related('user').all()
@@ -36,24 +38,26 @@ class CustomerProfileListView(generics.ListAPIView):
     
 
 class UserProfileDetailView(APIView):
-       permission_classes = [permissions.IsAuthenticated]
+       permission_classes = [permissions.IsAuthenticated,IsOwner]
+
+       def _load_profile(self, request, pk):    
+         profile = get_object_or_404(Profile, user__id=pk)
+         self.check_object_permissions(request, profile)
+         return profile 
 
        def get(self, request, pk):
-         profile = get_object_or_404(Profile, user__id=pk)
-
+         profile = self._load_profile(request, pk)
          if profile.user_type == 'business':
             business_profile = get_object_or_404(BusinessProfile, user__id=pk)
             serializer = BusinessProfileSerializer(business_profile)
          else:
             customer_profile = get_object_or_404(CustomerProfile, user__id=pk)
             serializer = CustomerProfileSerializer(customer_profile)
-
          return Response(serializer.data)     
-       
+
 
        def patch(self,request,pk):
-           profile=get_object_or_404(Profile,user__id=pk)
-
+           profile = self._load_profile(request, pk)
            if profile.user_type == 'business':
                instance=get_object_or_404(BusinessProfile,user__id=pk)
                serializer=BusinessProfileSerializer(instance,data=request.data, partial=True)

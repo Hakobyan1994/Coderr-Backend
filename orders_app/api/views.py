@@ -1,6 +1,6 @@
 from .permission import IsCustomerUser
 from orders_app.models import  Order
-from rest_framework import generics, status
+from rest_framework import generics, status,permissions
 from rest_framework.permissions import IsAuthenticated,IsAdminUser
 from .serializer import ListCreateOrderSerializer,SingleOrderSerializer
 from django.db.models import Q
@@ -10,6 +10,8 @@ from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 from user_auth_app.models import Profile
 from rest_framework.response import Response
+from rest_framework.exceptions import PermissionDenied
+
 
 class ListCreateOrderView(generics.ListCreateAPIView):
     serializer_class = ListCreateOrderSerializer
@@ -37,19 +39,32 @@ class  SingleOrderView(generics.RetrieveUpdateDestroyAPIView):
 
 
     def get_permissions(self):
-        if self.request.method == 'PATCH':
-            permission_classes = [IsAuthenticated, IsBusinessUser]
-        elif self.request.method == 'DELETE':
-            permission_classes = [IsAuthenticated, IsAdminUser]
+        if self.request.method == 'DELETE':
+            permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
         else:
-            permission_classes = [IsAuthenticated]
+            permission_classes = [permissions.IsAuthenticated]
         return [permission() for permission in permission_classes]
-    
+
+
+
+
+
+    def get_object(self):
+      obj = get_object_or_404(Order, pk=self.kwargs['pk'])
+
+      if self.request.method == 'PATCH':
+        profile = getattr(self.request.user, 'profile', None)
+
+        if not (profile and profile.user_type == 'business'):
+            raise PermissionDenied("Only business users can edit orders.")
+
+        if obj.business_user != self.request.user:
+            raise PermissionDenied("You do not have permission to edit this order.")
+
+      return obj
 
     def perform_update(self, serializer):
         serializer.save()
-
-
 
 class OrderCountView(APIView):
     permission_classes = [IsAuthenticated]

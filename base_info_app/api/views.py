@@ -15,13 +15,10 @@ class BaseInfoView(APIView):
             business_profile_count=Offer.objects.values('creator').distinct().count()
             offer_count=Offer.objects.count()
 
-
- 
             data = {
              'review_count': review_count,
              'average_rating': average_rating,
              'business_profile_count': business_profile_count,
              'offer_count': offer_count
         }
-
             return Response(data, status=status.HTTP_200_OK)

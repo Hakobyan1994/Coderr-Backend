@@ -7,7 +7,7 @@ from rest_framework.pagination import PageNumberPagination
 from django.shortcuts import get_object_or_404
 from.permission import IsBusinessUser,IsOfferCreatorOrReadOnly
 from user_auth_app.models import Profile 
-
+from django.db.models import Prefetch
 
 
 class OfferListPagination(PageNumberPagination):
@@ -33,11 +33,20 @@ class OfferListCreateView(generics.ListCreateAPIView):
         queryset = Offer.objects.all()
         user = self.request.user
         user_profile = getattr(user, 'profile', None)
-        max_delivery = self.request.query_params.get("max_delivery_time")
+        min_price = self.request.query_params.get("min_price")
         if user.is_authenticated and user_profile and user_profile.user_type == 'business':
             queryset = queryset.filter(creator=user)
-        if max_delivery:
-            queryset = queryset.filter(details__delivery_time_in_days__lte=max_delivery)
+        if min_price:
+            try:
+                min_price = float(min_price)
+                queryset = queryset.filter(details__price__gte=min_price).distinct()
+                queryset = queryset.prefetch_related(
+                    Prefetch('details',queryset=OfferDetail.objects.filter(price__gte=min_price))
+                )
+            except ValueError:
+                pass
+        else:
+            queryset = queryset.prefetch_related('details')
         return queryset
 
 
@@ -46,16 +55,37 @@ class OfferListCreateView(generics.ListCreateAPIView):
 
 
 class OfferRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Offer.objects.prefetch_related('details').all()
     serializer_class = OfferSerializer
-    permission_classes = [permissions.IsAuthenticated,IsOfferCreatorOrReadOnly]
     
+    def get_permissions(self):
+        if self.request.method in ['PATCH','DELETE']:
+              return [permissions.IsAuthenticated(),IsOfferCreatorOrReadOnly()]  
+        return [permissions.AllowAny()]
+        
+    def get_object(self):
+        pk = self.kwargs['pk']
+        detail = OfferDetail.objects.filter(pk=pk).select_related('offer').first()
+        if detail:
+            offer = (
+                Offer.objects
+                .filter(pk=detail.offer_id)
+                .prefetch_related(
+                    Prefetch('details',
+                             queryset=OfferDetail.objects.filter(pk=pk))
+                )
+                .get()  
+            )
+            self.check_object_permissions(self.request, offer)
+            return offer
+        offer = get_object_or_404(Offer.objects.prefetch_related('details'), pk=pk)
+        self.check_object_permissions(self.request, offer)
+        return offer
+
 
 class OfferDetailView(RetrieveAPIView):
     queryset = OfferDetail.objects.all()
     serializer_class = OfferDetailSerializer 
     permission_classes = [permissions.IsAuthenticated]   
-
 
     def perform_update(self, serializer):
         serializer.save()

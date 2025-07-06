@@ -6,8 +6,16 @@ from django.contrib.auth.models import User
 class OfferDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = OfferDetail
-        fields = '__all__'
-        read_only_fields = ['offer']
+        fields = [
+            'id',
+            'title',
+            'offer_type',
+            'description',
+            'price',
+            'delivery_time_in_days',
+            'revisions',
+            'features'
+        ]
 
         
     def to_internal_value(self, data):
@@ -39,6 +47,13 @@ class OfferSerializer(serializers.ModelSerializer):
     def get_user(self, obj):
         return obj.creator.id
 
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        if len(rep.get('details', [])) == 1:
+            rep.pop('min_price', None)
+            rep.pop('min_delivery_time', None)
+        return rep
+
     def create(self, validated_data):
         details_data = validated_data.pop('details', [])
         validated_data.pop('user', None)
@@ -66,7 +81,6 @@ class OfferSerializer(serializers.ModelSerializer):
         validated_data.pop('user', None)
         instance.title = validated_data.get('title', instance.title)
         instance.description = validated_data.get('description', instance.description)
-
         image = validated_data.get('image', None)
         if image:
             instance.image = image
@@ -90,5 +104,4 @@ class OfferSerializer(serializers.ModelSerializer):
         if min_delivery_time is not None:
             instance.min_delivery_time = min_delivery_time
         instance.save()
-        return instance
-           
+        return instance 

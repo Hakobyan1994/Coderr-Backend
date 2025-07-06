@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny
 from .serializer import RegistrationSerializer
-from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_201_CREATED,HTTP_200_OK,HTTP_401_UNAUTHORIZED
+from rest_framework.status import HTTP_200_OK
 from django.contrib.auth import authenticate
 from rest_framework.views import APIView
 from django.contrib.auth.models import User
@@ -36,7 +36,7 @@ class RegistrationView(generics.CreateAPIView):
             "email": user.email,
             "type": user.profile.user_type
             }
-            return Response(data,status=HTTP_201_CREATED)
+            return Response(data,status=status.HTTP_201_CREATED)
         
         else:
            response_data = {
@@ -89,7 +89,7 @@ class LoginView(APIView):
                         'file': None
                     }
                 )
-            else:  # customer
+            elif  user_type == 'customer':
                 CustomerProfile.objects.get_or_create(
                     user=user,
                     defaults={
@@ -101,9 +101,9 @@ class LoginView(APIView):
                         'file': None
                     }
                 )
-
+            else: 
+                return Response({"error": "Ungültiger user_type angegeben. Muss 'business' oder 'customer' sein."},status=status.HTTP_400_BAD_REQUEST)
             token, _ = Token.objects.get_or_create(user=user)
-
             return Response({
                 "token": token.key,
                 "user_id": user.id,
@@ -125,7 +125,7 @@ class LoginView(APIView):
             }, status=HTTP_200_OK)
 
         return Response({"error": "Ungültiger Benutzername oder Passwort"},
-                        status=HTTP_401_UNAUTHORIZED)
+                        status=status.HTTP_400_BAD_REQUEST)
 
 
 
