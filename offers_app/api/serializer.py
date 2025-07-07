@@ -3,6 +3,22 @@ from rest_framework import serializers
 from offers_app.models import Offer,OfferDetail
 from django.contrib.auth.models import User
 
+
+
+
+
+class OfferDetailMiniSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = OfferDetail
+        fields = ("id", "url")    
+        extra_kwargs = {
+            "url": {
+                "view_name": "offer-detail-single",   
+                "lookup_field": "pk",
+            }
+        }
+
+
 class OfferDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = OfferDetail
@@ -10,7 +26,6 @@ class OfferDetailSerializer(serializers.ModelSerializer):
             'id',
             'title',
             'offer_type',
-            'description',
             'price',
             'delivery_time_in_days',
             'revisions',
@@ -34,14 +49,19 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'first_name', 'last_name']
 
 class OfferSerializer(serializers.ModelSerializer):
-    details = OfferDetailSerializer(many=True, required=False)
+    details = OfferDetailSerializer(many=True, write_only=True, required=False)
+
+    # 2) Mini-Version – nur zum Lesen
+    details_mini = OfferDetailMiniSerializer(
+        source="details", many=True, read_only=True
+    )
     user = serializers.SerializerMethodField()
     min_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
     min_delivery_time = serializers.IntegerField(read_only=True)
     class Meta:
         model = Offer
         fields = ['id', 'user', 'title', 'description', 'image',
-            'created_at', 'updated_at', 'details', 'min_price', 'min_delivery_time']
+            'created_at', 'updated_at', 'details', 'min_price', 'min_delivery_time','details_mini']
         read_only_fields = ['user', 'created_at','updated_at', 'min_price', 'min_delivery_time']
 
     def get_user(self, obj):
@@ -49,6 +69,7 @@ class OfferSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
+        rep["details"] = rep.pop("details_mini", [])
         if len(rep.get('details', [])) == 1:
             rep.pop('min_price', None)
             rep.pop('min_delivery_time', None)

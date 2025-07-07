@@ -5,7 +5,6 @@ from .permissions import  IsCustomerUser
 
 class ReviewListCreateView(generics.ListCreateAPIView):
     serializer_class = ReviewSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         queryset = Review.objects.all()
@@ -23,9 +22,8 @@ class ReviewListCreateView(generics.ListCreateAPIView):
     def get_permissions(self):
         if self.request.method == 'POST':
              return  [permissions.IsAuthenticated(), IsCustomerUser()]
-        return [permissions.AllowAny()] 
-
-
+        elif self.request.method == 'GET':
+          return [permissions.IsAuthenticated()] 
 
 
     def perform_create(self, serializer):

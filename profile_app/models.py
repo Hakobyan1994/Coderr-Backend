@@ -21,7 +21,7 @@ class BusinessProfile(models.Model):
     working_hours = models.CharField(max_length=255)
     created_at = models.CharField(max_length=200)
     email=models.EmailField(blank=True)
-
+    
 class CustomerProfile(models.Model):
     user=models.OneToOneField(User,on_delete=models.CASCADE)
     user_type = models.CharField(max_length=20, choices=USER_TYPE_CHOICES, default='customer')
