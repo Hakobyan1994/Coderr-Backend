@@ -82,7 +82,12 @@ class OfferRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         if self.request.method in ['PATCH','DELETE']:
               return [permissions.IsAuthenticated(),IsOfferCreatorOrReadOnly()]  
         return [permissions.IsAuthenticated()]
-        
+
+    def get_serializer_context(self):
+        ctx = super().get_serializer_context()
+        ctx["is_detail"] = True 
+        return ctx
+
     def get_object(self):
         pk = self.kwargs['pk']
         detail = OfferDetail.objects.filter(pk=pk).select_related('offer').first()

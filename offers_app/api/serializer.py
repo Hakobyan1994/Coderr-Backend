@@ -2,7 +2,7 @@
 from rest_framework import serializers
 from offers_app.models import Offer,OfferDetail
 from django.contrib.auth.models import User
-
+from collections import OrderedDict 
 
 
 
@@ -46,34 +46,52 @@ class OfferDetailSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'first_name', 'last_name']
+        fields = ['username', 'first_name', 'last_name']
 
 class OfferSerializer(serializers.ModelSerializer):
     details = OfferDetailSerializer(many=True, write_only=True, required=False)
-
-    # 2) Mini-Version – nur zum Lesen
-    details_mini = OfferDetailMiniSerializer(
-        source="details", many=True, read_only=True
-    )
+    details_mini = OfferDetailMiniSerializer(source="details", many=True, read_only=True)
     user = serializers.SerializerMethodField()
+    user_details = UserSerializer(source="creator", read_only=True)
     min_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
     min_delivery_time = serializers.IntegerField(read_only=True)
     class Meta:
         model = Offer
         fields = ['id', 'user', 'title', 'description', 'image',
-            'created_at', 'updated_at', 'details', 'min_price', 'min_delivery_time','details_mini']
-        read_only_fields = ['user', 'created_at','updated_at', 'min_price', 'min_delivery_time']
+            'created_at', 'updated_at','details', "user_details",'details_mini', 'min_price', 'min_delivery_time',]
+        read_only_fields = ['user',"user_details", 'created_at','updated_at', 'min_price', 'min_delivery_time']
 
     def get_user(self, obj):
         return obj.creator.id
 
+
+    def _ordered_output(self,rep, details_data):
+        order = ["id", "user", "title", "description", "image", "created_at", "updated_at", "details","min_price", "min_delivery_time", "user_details",]
+        out = OrderedDict()
+        for key in order:
+            if key == "details":
+                out[key] = details_data
+            elif key in rep:
+                out[key] = rep[key]
+        return out
+
+
+
     def to_representation(self, instance):
-        rep = super().to_representation(instance)
-        rep["details"] = rep.pop("details_mini", [])
-        if len(rep.get('details', [])) == 1:
-            rep.pop('min_price', None)
-            rep.pop('min_delivery_time', None)
-        return rep
+        rep     = super().to_representation(instance)
+        if self.context.get("is_detail"):
+         rep.pop("user_details", None)
+        request = self.context.get("request")
+        if request and request.method == "POST":
+            rep["details"] = OfferDetailSerializer(instance.details.all(), many=True).data
+            rep.pop("details_mini", None)
+            rep.pop("min_price",   None)
+            rep.pop("min_delivery_time", None)
+            rep.pop("user_details",None)
+            return rep
+        details_data = rep.pop("details_mini", [])
+        return self._ordered_output(rep, details_data)
+
 
     def create(self, validated_data):
         details_data = validated_data.pop('details', [])
