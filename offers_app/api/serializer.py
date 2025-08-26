@@ -39,8 +39,7 @@ class OfferDetailSerializer(serializers.ModelSerializer):
         data['delivery_time_in_days'] = int(data.get('delivery_time_in_days', 0))
         revisions = data.get('revisions', -1)
         data['revisions'] = int(revisions) if revisions != '' else -1
-        return super().to_internal_value(data)
-
+        return super().to_internal_value(data)      
 
 
 class UserSerializer(serializers.ModelSerializer):

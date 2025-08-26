@@ -27,7 +27,17 @@ SECRET_KEY = 'django-insecure-t188dc=rz#h9l$ruf4rduag2n_ab*!y#o=4l#6!5h$5o)c14l8
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [ '.herokuapp.com',
+                 'localhost',
+                 '127.0.0.1',
+                 "coderr-app-4c517497cade.herokuapp.com",
+                 ]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://coderr-app-4c517497cade.herokuapp.com"
+    "https://*.herokuapp.com",
+]
+
 
 
 # Application definition
@@ -92,12 +102,24 @@ WSGI_APPLICATION = 'Coderr.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'd9351b3ok0bhsb',
+        'USER': 'ubker0ji7a4djj',
+        'PASSWORD': 'p6934289257135b8f2cad6b10746ae852de234bf061d83a0995e7229e4b9993a0',
+        'HOST': 'c4uljrch9k8rpm.cluster-czz5s0kz4scl.eu-west-1.rds.amazonaws.com',
+        'PORT': '5432'
     }
-}
+} 
 
 
 # Password validation
