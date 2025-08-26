@@ -27,14 +27,15 @@ SECRET_KEY = 'django-insecure-t188dc=rz#h9l$ruf4rduag2n_ab*!y#o=4l#6!5h$5o)c14l8
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [ '.herokuapp.com',
-                 'localhost',
-                 '127.0.0.1',
-                 "coderr-app-4c517497cade.herokuapp.com",
-                 ]
+ALLOWED_HOSTS = [
+    ".herokuapp.com",
+    "localhost",
+    "127.0.0.1",
+    "coderr-app-4c517497cade.herokuapp.com",
+]
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://coderr-app-4c517497cade.herokuapp.com"
+    "https://coderr-app-4c517497cade.herokuapp.com",
     "https://*.herokuapp.com",
 ]
 
