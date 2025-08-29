@@ -11,7 +11,10 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
-
+import os
+from dotenv import load_dotenv
+load_dotenv()
+import dj_database_url
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 MEDIA_URL = '/media/'
@@ -108,17 +111,16 @@ WSGI_APPLICATION = 'Coderr.wsgi.application'
 #     }
 # }
 
+if os.getenv("ENV") != "production":
+    load_dotenv(BASE_DIR / ".env")
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'd9351b3ok0bhsb',
-        'USER': 'ubker0ji7a4djj',
-        'PASSWORD': 'p6934289257135b8f2cad6b10746ae852de234bf061d83a0995e7229e4b9993a0',
-        'HOST': 'c4uljrch9k8rpm.cluster-czz5s0kz4scl.eu-west-1.rds.amazonaws.com',
-        'PORT': '5432'
-    }
-} 
+    "default": dj_database_url.config(
+        default=os.getenv("DATABASE_URL"),
+        conn_max_age=600,
+        ssl_require=os.getenv("ENV") == "production"
+    )
+}
 
 
 # Password validation
